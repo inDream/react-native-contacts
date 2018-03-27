@@ -184,6 +184,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         String[] postalAddressesRegion = null;
         String[] postalAddressesPostCode = null;
         String[] postalAddressesCountry = null;
+        String lastPostalAddress = null;
         Integer[] postalAddressesLabel = null;
         if (postalAddresses != null) {
             numOfPostalAddresses = postalAddresses.size();
@@ -202,6 +203,9 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 postalAddressesPostCode[i] = postalAddresses.getMap(i).getString("postCode");
                 postalAddressesCountry[i] = postalAddresses.getMap(i).getString("country");
                 postalAddressesLabel[i] = mapStringToPostalAddressType(postalAddresses.getMap(i).getString("label"));
+                lastPostalAddress = postalAddressesStreet[i] + "\n" +
+                    postalAddressesCity[i] + "\n" +  postalAddressesState[i] + "\n" +
+                    postalAddressesRegion[i] + "\n" + postalAddressesCountry[i] + "\n";
             }
         }
 
@@ -255,6 +259,10 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         Intent intent = new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI);
         intent.putExtra(ContactsContract.Intents.Insert.NAME, displayName);
         intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, contactData);
+        if (lastPostalAddress != null) {
+            intent.putExtra(ContactsContract.Intents.Insert.POSTAL, lastPostalAddress);
+            intent.putExtra(ContactsContract.Intents.Insert.POSTAL_TYPE, CommonDataKinds.StructuredPostal.TYPE_WORK);
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         Context context = getReactApplicationContext();
@@ -496,7 +504,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 ops.add(op.build());
             }
         }
-        
+
         Context ctx = getReactApplicationContext();
         try {
             ContentResolver cr = ctx.getContentResolver();
